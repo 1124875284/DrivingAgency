@@ -2,6 +2,9 @@
 
 使用SpringBoot构建的基于RBAC权限模型的驾校代理小程序后端
 
+## Link
+[https://juejin.im/post/5ca86a07e51d4578e5153a9b](https://juejin.im/post/5ca86a07e51d4578e5153a9b)
+
 ## 技术包括
 
 1.  Spring Boot 2.1.3
