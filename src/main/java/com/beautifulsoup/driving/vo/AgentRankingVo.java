@@ -20,7 +20,7 @@ public class AgentRankingVo implements Serializable {
     private static final long serialVersionUID = -809744186738697050L;
     private Integer id;
     private String agentName;
-    private Integer dailyAchieve;
+    private Integer dailyAchieve;//日业绩
     private Integer agentAchieve;//总业绩
     private Integer starNums;
     @JsonProperty(value = "comments")

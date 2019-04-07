@@ -112,6 +112,25 @@ public class AgentManageServiceImpl implements AgentManageService {
                 ,Double.parseDouble(MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
                                 DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName())),"0")));
 
+                AgentRankingVo agentRankingVo=new AgentRankingVo();
+                BeanUtils.copyProperties(agent,agentRankingVo);
+                String  totalAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
+                        DrivingConstant.Redis.ACHIEVEMENT_AGENT + agent.getAgentName());
+                String  dailyAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
+                        DrivingConstant.Redis.ACHIEVEMENT_AGENT + agent.getAgentName());
+                if (StringUtils.isBlank(dailyAchieve)){
+                    agentRankingVo.setDailyAchieve(0);
+                }else{
+                    agentRankingVo.setDailyAchieve(Integer.parseInt(dailyAchieve));
+                }
+                if (StringUtils.isBlank(totalAchieve)){
+                    agentRankingVo.setAgentAchieve(0);
+                }else{
+                    agentRankingVo.setAgentAchieve(Integer.parseInt(totalAchieve));
+                }
+                redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS,
+                        DrivingConstant.Redis.RANKING_AGENT+authentication.getAgentName(),agentRankingVo);
+
                 Role role=roleRepository.findById(3).get();
                 agent.setRole(role);
 
@@ -327,7 +346,8 @@ public class AgentManageServiceImpl implements AgentManageService {
     @Override
     public List<AgentRankingVo> rankingListbyDailyAchievements() {
         List<AgentRankingVo> agentBaseInfoVos=Lists.newArrayList();
-        List<String> collect = stringRedisTemplate.opsForZSet().reverseRange(DrivingConstant.Redis.ACHIEVEMENT_DAILY_ORDER, 0, 9).stream()
+        List<String> collect = stringRedisTemplate.opsForZSet()
+                .reverseRange(DrivingConstant.Redis.ACHIEVEMENT_DAILY_ORDER, 0, 9).stream()
                 .map(key -> key.substring(key.lastIndexOf(":") + 1)).collect(Collectors.toList());
         for (String name:collect){
             String agentKey=String.join("",DrivingConstant.Redis.RANKING_AGENT,name);
@@ -337,7 +357,8 @@ public class AgentManageServiceImpl implements AgentManageService {
                 agentBaseInfoVos.add(agentRankingVo);
             }
         }
-        return agentBaseInfoVos;
+        List<AgentRankingVo> collect1 = agentBaseInfoVos.stream().sorted(Comparator.comparing(AgentRankingVo::getDailyAchieve).reversed()).collect(Collectors.toList());
+        return collect1;
     }
 
     @Override
@@ -353,7 +374,8 @@ public class AgentManageServiceImpl implements AgentManageService {
                 agentBaseInfoVos.add(agentRankingVo);
             }
         }
-        return agentBaseInfoVos;
+        List<AgentRankingVo> collect1 = agentBaseInfoVos.stream().sorted(Comparator.comparing(AgentRankingVo::getAgentAchieve).reversed()).collect(Collectors.toList());
+        return collect1;
     }
 
     @Override
@@ -364,7 +386,8 @@ public class AgentManageServiceImpl implements AgentManageService {
         }
         Long starNums = stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.AGENT_STARS, username, 1);
         AgentRankingVo agentRankingVo =
-                (AgentRankingVo) redisTemplate.opsForHash().get(DrivingConstant.Redis.RANKING_AGENTS, DrivingConstant.Redis.RANKING_AGENT+ username);
+                (AgentRankingVo) redisTemplate.opsForHash().
+                        get(DrivingConstant.Redis.RANKING_AGENTS, DrivingConstant.Redis.RANKING_AGENT+ username);
         if (agentRankingVo != null) {
             agentRankingVo.setStarNums(starNums.intValue());
             redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS, DrivingConstant.Redis.RANKING_AGENT+ username,agentRankingVo);

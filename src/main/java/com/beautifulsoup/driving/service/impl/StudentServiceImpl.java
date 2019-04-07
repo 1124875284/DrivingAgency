@@ -15,22 +15,26 @@ import com.beautifulsoup.driving.repository.StudentRepository;
 import com.beautifulsoup.driving.service.AgentManageService;
 import com.beautifulsoup.driving.service.StudentService;
 import com.beautifulsoup.driving.utils.ParamValidatorUtil;
+import com.beautifulsoup.driving.vo.AgentRankingVo;
 import com.beautifulsoup.driving.vo.AgentVo;
 import com.beautifulsoup.driving.vo.StudentVo;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 
 import javax.management.relation.RoleStatus;
+import java.io.Serializable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,6 +52,9 @@ public class StudentServiceImpl implements StudentService {
 
     @Autowired
     private AgentManageService agentManageService;
+
+    @Autowired
+    private RedisTemplate<String, Serializable> redisTemplate;
 
     @Override
     public StudentVo addNewStudent(StudentDto studentDto, BindingResult result) {
@@ -103,7 +110,24 @@ public class StudentServiceImpl implements StudentService {
 
         }
 
-
+        AgentRankingVo agentRankingVo=new AgentRankingVo();
+        BeanUtils.copyProperties(authentication,agentRankingVo);
+        String  totalAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
+                DrivingConstant.Redis.ACHIEVEMENT_AGENT + authentication.getAgentName());
+        String  dailyAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
+                DrivingConstant.Redis.ACHIEVEMENT_AGENT + authentication.getAgentName());
+        if (StringUtils.isBlank(dailyAchieve)){
+            agentRankingVo.setDailyAchieve(0);
+        }else{
+            agentRankingVo.setDailyAchieve(Integer.parseInt(dailyAchieve));
+        }
+        if (StringUtils.isBlank(totalAchieve)){
+            agentRankingVo.setAgentAchieve(0);
+        }else{
+            agentRankingVo.setAgentAchieve(Integer.parseInt(totalAchieve));
+        }
+        redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS,
+                DrivingConstant.Redis.RANKING_AGENT+authentication.getAgentName(),agentRankingVo);
         StudentVo studentVo=new StudentVo();
         BeanUtils.copyProperties(student,studentVo);
         return studentVo;
