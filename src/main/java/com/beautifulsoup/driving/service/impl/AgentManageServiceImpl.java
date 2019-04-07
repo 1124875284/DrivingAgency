@@ -296,6 +296,22 @@ public class AgentManageServiceImpl implements AgentManageService {
             List<Agent> allByParentId = agentRepository.findAllByParentId(agentByAgentName.getId());
             allByParentId.stream().forEach(agent -> {
                 AgentBaseInfoVo agentBaseInfoVo=new AgentBaseInfoVo();
+
+                String  totalAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
+                        DrivingConstant.Redis.ACHIEVEMENT_AGENT + agent.getAgentName());
+                String  dailyAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
+                        DrivingConstant.Redis.ACHIEVEMENT_AGENT + agent.getAgentName());
+                if (StringUtils.isBlank(dailyAchieve)){
+                    agentBaseInfoVo.setDailyAchieve(0);
+                }else{
+                    agentBaseInfoVo.setDailyAchieve(Integer.parseInt(dailyAchieve));
+                }
+                if (StringUtils.isBlank(totalAchieve)){
+                    agentBaseInfoVo.setAgentAchieve(0);
+                }else{
+                    agentBaseInfoVo.setAgentAchieve(Integer.parseInt(totalAchieve));
+                }
+
                 BeanUtils.copyProperties(agent,agentBaseInfoVo);
                 agentBaseInfoVos.add(agentBaseInfoVo);
             });
