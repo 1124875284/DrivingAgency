@@ -164,7 +164,23 @@ public class AgentManageServiceImpl implements AgentManageService {
         while (iterator.hasNext()){
             Agent next = iterator.next();
             AgentVo agentVo=new AgentVo();
+
             BeanUtils.copyProperties(next,agentVo);
+            String  totalAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
+                    DrivingConstant.Redis.ACHIEVEMENT_AGENT + next.getAgentName());
+            String  dailyAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
+                    DrivingConstant.Redis.ACHIEVEMENT_AGENT + next.getAgentName());
+            if (StringUtils.isBlank(dailyAchieve)){
+                agentVo.setDailyAchieve(0);
+            }else{
+                agentVo.setDailyAchieve(Integer.parseInt(dailyAchieve));
+            }
+            if (StringUtils.isBlank(totalAchieve)){
+                agentVo.setAgentAchieve(0);
+            }else{
+                agentVo.setAgentAchieve(Integer.parseInt(totalAchieve));
+            }
+
             agentVos.add(agentVo);
         }
         List<AgentVo> collect = agentVos.stream().sorted(Comparator.comparing(AgentVo::getAgentAchieve).reversed()).collect(Collectors.toList());
