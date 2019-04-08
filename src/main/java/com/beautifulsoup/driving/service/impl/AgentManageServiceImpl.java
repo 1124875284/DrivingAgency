@@ -103,7 +103,19 @@ public class AgentManageServiceImpl implements AgentManageService {
 
                 Role role=roleRepository.findById(3).get();
                 agent.setRole(role);
+                Agent parent = agentRepository.findById(authentication.getParentId()).get();
+                stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),1);
+                stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),1);
 
+                stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_TOTAL_ORDER,
+                        DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),
+                        Double.parseDouble(MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash()
+                                .get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL, DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName())),"0")));
+
+                stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_DAILY_ORDER,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName()
+                        ,Double.parseDouble(
+                                MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
+                                        DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName())),"0")));
             }
         //总业绩和当天业绩的更新
         stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName(),1);
@@ -116,7 +128,6 @@ public class AgentManageServiceImpl implements AgentManageService {
         stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_DAILY_ORDER,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName()
                 ,Double.parseDouble(MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
                         DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName())),"0")));
-
         AgentRankingVo agentRankingVo=new AgentRankingVo();
         BeanUtils.copyProperties(agent,agentRankingVo);
         String  totalAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
