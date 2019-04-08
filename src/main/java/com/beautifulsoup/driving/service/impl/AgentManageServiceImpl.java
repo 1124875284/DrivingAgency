@@ -90,7 +90,7 @@ public class AgentManageServiceImpl implements AgentManageService {
         }
 
 
-        if (authentication != null) {
+
             if (authentication.getParentId().equals(RoleCode.ROLE_ADMIN.getType())){
                 agent.setStatus(AgentStatus.EXAMINED.getCode());
                 agent.setParentId(RoleCode.ROLE_FIRST_TIER_AGENT.getType());
@@ -129,14 +129,14 @@ public class AgentManageServiceImpl implements AgentManageService {
                     agentRankingVo.setAgentAchieve(Integer.parseInt(totalAchieve));
                 }
                 redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS,
-                        DrivingConstant.Redis.RANKING_AGENT+authentication.getAgentName(),agentRankingVo);
+                        DrivingConstant.Redis.RANKING_AGENT+agentRankingVo.getAgentName(),agentRankingVo);
 
                 Role role=roleRepository.findById(3).get();
                 agent.setRole(role);
 
             }
             agentRepository.save(agent);
-        }
+
         AgentBaseInfoVo agentBaseInfoVo=new AgentBaseInfoVo();
         BeanUtils.copyProperties(agent,agentBaseInfoVo);
         redisTemplate.opsForHash().put(DrivingConstant.Redis.ACHIEVEMENT_AGENTS,
@@ -284,7 +284,8 @@ public class AgentManageServiceImpl implements AgentManageService {
     public List<AgentBaseInfoVo> listAllAgentsByDailyAchievements() {
         List<AgentVo> agentVos = listAllProcessedAgents();
         List<AgentBaseInfoVo> collect =Lists.newArrayList();
-        agentVos.stream().sorted(Comparator.comparing(AgentVo::getDailyAchieve).reversed())
+        agentVos.stream().filter(agentVo -> !agentVo.getRoleVo().getType().equals(RoleCode.ROLE_ADMIN.getType()))
+                .sorted(Comparator.comparing(AgentVo::getDailyAchieve).reversed())
                 .forEach(agentVo -> {
                     AgentBaseInfoVo agentBaseInfoVo=new AgentBaseInfoVo();
                     BeanUtils.copyProperties(agentVo,agentBaseInfoVo);
@@ -298,7 +299,8 @@ public class AgentManageServiceImpl implements AgentManageService {
     public List<AgentBaseInfoVo> listAllAgentsByTotalAchievements() {
         List<AgentVo> agentVos = listAllProcessedAgents();
         List<AgentBaseInfoVo> collect =Lists.newArrayList();
-        agentVos.stream().sorted(Comparator.comparing(AgentVo::getAgentAchieve).reversed())
+        agentVos.stream().filter(agentVo -> !agentVo.getRoleVo().getType().equals(RoleCode.ROLE_ADMIN.getType()))
+                .sorted(Comparator.comparing(AgentVo::getAgentAchieve).reversed())
                 .forEach(agentVo -> {
                     AgentBaseInfoVo agentBaseInfoVo=new AgentBaseInfoVo();
                     BeanUtils.copyProperties(agentVo,agentBaseInfoVo);
@@ -354,11 +356,25 @@ public class AgentManageServiceImpl implements AgentManageService {
             AgentRankingVo agentRankingVo =
                     (AgentRankingVo) redisTemplate.opsForHash().get(DrivingConstant.Redis.RANKING_AGENTS, agentKey);
             if (agentRankingVo != null) {
+                String  totalAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
+                        DrivingConstant.Redis.ACHIEVEMENT_AGENT + agentRankingVo.getAgentName());
+                String  dailyAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
+                        DrivingConstant.Redis.ACHIEVEMENT_AGENT + agentRankingVo.getAgentName());
+                if (StringUtils.isBlank(dailyAchieve)){
+                    agentRankingVo.setDailyAchieve(0);
+                }else{
+                    agentRankingVo.setDailyAchieve(Integer.parseInt(dailyAchieve));
+                }
+                if (StringUtils.isBlank(totalAchieve)){
+                    agentRankingVo.setAgentAchieve(0);
+                }else{
+                    agentRankingVo.setAgentAchieve(Integer.parseInt(totalAchieve));
+                }
+
                 agentBaseInfoVos.add(agentRankingVo);
             }
         }
-        List<AgentRankingVo> collect1 = agentBaseInfoVos.stream().sorted(Comparator.comparing(AgentRankingVo::getDailyAchieve).reversed()).collect(Collectors.toList());
-        return collect1;
+        return agentBaseInfoVos;
     }
 
     @Override
@@ -371,16 +387,32 @@ public class AgentManageServiceImpl implements AgentManageService {
             AgentRankingVo agentRankingVo =
                     (AgentRankingVo) redisTemplate.opsForHash().get(DrivingConstant.Redis.RANKING_AGENTS, agentKey);
             if (agentRankingVo != null) {
+
+                String  totalAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
+                        DrivingConstant.Redis.ACHIEVEMENT_AGENT + agentRankingVo.getAgentName());
+                String  dailyAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
+                        DrivingConstant.Redis.ACHIEVEMENT_AGENT + agentRankingVo.getAgentName());
+                if (StringUtils.isBlank(dailyAchieve)){
+                    agentRankingVo.setDailyAchieve(0);
+                }else{
+                    agentRankingVo.setDailyAchieve(Integer.parseInt(dailyAchieve));
+                }
+                if (StringUtils.isBlank(totalAchieve)){
+                    agentRankingVo.setAgentAchieve(0);
+                }else{
+                    agentRankingVo.setAgentAchieve(Integer.parseInt(totalAchieve));
+                }
+
                 agentBaseInfoVos.add(agentRankingVo);
             }
         }
-        List<AgentRankingVo> collect1 = agentBaseInfoVos.stream().sorted(Comparator.comparing(AgentRankingVo::getAgentAchieve).reversed()).collect(Collectors.toList());
-        return collect1;
+        return agentBaseInfoVos;
     }
 
     @Override
     public AgentRankingVo starAgent(String username) {
-        boolean b = redisTemplate.opsForHash().hasKey(DrivingConstant.Redis.RANKING_AGENTS, DrivingConstant.Redis.RANKING_AGENT + username).booleanValue();
+        boolean b = redisTemplate.opsForHash().hasKey(DrivingConstant.Redis.RANKING_AGENTS,
+                DrivingConstant.Redis.RANKING_AGENT + username).booleanValue();
         if (!b){
             throw new ParamException("当前代理不存在,点赞失败");
         }

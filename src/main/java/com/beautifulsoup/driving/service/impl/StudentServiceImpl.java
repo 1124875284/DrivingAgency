@@ -103,31 +103,16 @@ public class StudentServiceImpl implements StudentService {
             stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_TOTAL_ORDER,
                     DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),
                     Double.parseDouble(MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash()
-                            .get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName())),"0")));
+                            .get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL, DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName())),"0")));
+
             stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_DAILY_ORDER,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName()
-                    ,Double.parseDouble(MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
+                    ,Double.parseDouble(
+                            MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
                             DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName())),"0")));
 
         }
 
-        AgentRankingVo agentRankingVo=new AgentRankingVo();
-        BeanUtils.copyProperties(authentication,agentRankingVo);
-        String  totalAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
-                DrivingConstant.Redis.ACHIEVEMENT_AGENT + authentication.getAgentName());
-        String  dailyAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
-                DrivingConstant.Redis.ACHIEVEMENT_AGENT + authentication.getAgentName());
-        if (StringUtils.isBlank(dailyAchieve)){
-            agentRankingVo.setDailyAchieve(0);
-        }else{
-            agentRankingVo.setDailyAchieve(Integer.parseInt(dailyAchieve));
-        }
-        if (StringUtils.isBlank(totalAchieve)){
-            agentRankingVo.setAgentAchieve(0);
-        }else{
-            agentRankingVo.setAgentAchieve(Integer.parseInt(totalAchieve));
-        }
-        redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS,
-                DrivingConstant.Redis.RANKING_AGENT+authentication.getAgentName(),agentRankingVo);
+
         StudentVo studentVo=new StudentVo();
         BeanUtils.copyProperties(student,studentVo);
         return studentVo;

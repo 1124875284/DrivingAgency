@@ -62,7 +62,8 @@ public class DrivingListener implements CommandLineRunner {
                         }
                         agentRankingVo.setCommentVos(commentVos);
                     }
-
+                    agentRankingVo.setAgentAchieve(0);
+                    agentRankingVo.setDailyAchieve(0);
                     //维护其他信息,从缓存中获取,提高查询效率
                     redisTemplate.opsForHash().put(DrivingConstant.Redis.ACHIEVEMENT_AGENTS,
                             DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName(),agentBaseInfoVo);

@@ -25,6 +25,8 @@ public class RoleVo implements Serializable {
 
     private String operator;
 
+    private Integer type;
+
     @JsonSerialize(using = Date2LongSerializer.class)
     private Date updateTime;
 
