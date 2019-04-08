@@ -100,42 +100,43 @@ public class AgentManageServiceImpl implements AgentManageService {
             }else{
                 agent.setStatus(AgentStatus.UNEXAMINED.getCode());
                 agent.setParentId(authentication.getId());
-                //总业绩和当天业绩的更新
-                stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName(),1);
-                stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName(),1);
-                //排行榜数据的维护
-                stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_TOTAL_ORDER,
-                        DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName(),
-                        Double.parseDouble(MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash()
-                                .get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName())),"0")));
-                stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_DAILY_ORDER,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName()
-                ,Double.parseDouble(MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
-                                DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName())),"0")));
-
-                AgentRankingVo agentRankingVo=new AgentRankingVo();
-                BeanUtils.copyProperties(agent,agentRankingVo);
-                String  totalAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
-                        DrivingConstant.Redis.ACHIEVEMENT_AGENT + agent.getAgentName());
-                String  dailyAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
-                        DrivingConstant.Redis.ACHIEVEMENT_AGENT + agent.getAgentName());
-                if (StringUtils.isBlank(dailyAchieve)){
-                    agentRankingVo.setDailyAchieve(0);
-                }else{
-                    agentRankingVo.setDailyAchieve(Integer.parseInt(dailyAchieve));
-                }
-                if (StringUtils.isBlank(totalAchieve)){
-                    agentRankingVo.setAgentAchieve(0);
-                }else{
-                    agentRankingVo.setAgentAchieve(Integer.parseInt(totalAchieve));
-                }
-                redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS,
-                        DrivingConstant.Redis.RANKING_AGENT+agentRankingVo.getAgentName(),agentRankingVo);
 
                 Role role=roleRepository.findById(3).get();
                 agent.setRole(role);
 
             }
-            agentRepository.save(agent);
+        //总业绩和当天业绩的更新
+        stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName(),1);
+        stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName(),1);
+        //排行榜数据的维护
+        stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_TOTAL_ORDER,
+                DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName(),
+                Double.parseDouble(MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash()
+                        .get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName())),"0")));
+        stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_DAILY_ORDER,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName()
+                ,Double.parseDouble(MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
+                        DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName())),"0")));
+
+        AgentRankingVo agentRankingVo=new AgentRankingVo();
+        BeanUtils.copyProperties(agent,agentRankingVo);
+        String  totalAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
+                DrivingConstant.Redis.ACHIEVEMENT_AGENT + agent.getAgentName());
+        String  dailyAchieve = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
+                DrivingConstant.Redis.ACHIEVEMENT_AGENT + agent.getAgentName());
+        if (StringUtils.isBlank(dailyAchieve)){
+            agentRankingVo.setDailyAchieve(0);
+        }else{
+            agentRankingVo.setDailyAchieve(Integer.parseInt(dailyAchieve));
+        }
+        if (StringUtils.isBlank(totalAchieve)){
+            agentRankingVo.setAgentAchieve(0);
+        }else{
+            agentRankingVo.setAgentAchieve(Integer.parseInt(totalAchieve));
+        }
+        redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS,
+                DrivingConstant.Redis.RANKING_AGENT+agentRankingVo.getAgentName(),agentRankingVo);
+
+        agentRepository.save(agent);
 
         AgentBaseInfoVo agentBaseInfoVo=new AgentBaseInfoVo();
         BeanUtils.copyProperties(agent,agentBaseInfoVo);
@@ -284,7 +285,7 @@ public class AgentManageServiceImpl implements AgentManageService {
     public List<AgentBaseInfoVo> listAllAgentsByDailyAchievements() {
         List<AgentVo> agentVos = listAllProcessedAgents();
         List<AgentBaseInfoVo> collect =Lists.newArrayList();
-        agentVos.stream().filter(agentVo -> !agentVo.getRoleVo().getType().equals(RoleCode.ROLE_ADMIN.getType()))
+        agentVos.stream()
                 .sorted(Comparator.comparing(AgentVo::getDailyAchieve).reversed())
                 .forEach(agentVo -> {
                     AgentBaseInfoVo agentBaseInfoVo=new AgentBaseInfoVo();
@@ -299,7 +300,7 @@ public class AgentManageServiceImpl implements AgentManageService {
     public List<AgentBaseInfoVo> listAllAgentsByTotalAchievements() {
         List<AgentVo> agentVos = listAllProcessedAgents();
         List<AgentBaseInfoVo> collect =Lists.newArrayList();
-        agentVos.stream().filter(agentVo -> !agentVo.getRoleVo().getType().equals(RoleCode.ROLE_ADMIN.getType()))
+        agentVos.stream()
                 .sorted(Comparator.comparing(AgentVo::getAgentAchieve).reversed())
                 .forEach(agentVo -> {
                     AgentBaseInfoVo agentBaseInfoVo=new AgentBaseInfoVo();
