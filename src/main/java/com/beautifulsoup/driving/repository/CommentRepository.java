@@ -12,5 +12,8 @@ public interface CommentRepository extends MongoRepository<Comment,String> {
     List<Comment> findAllByName(String name, Sort.Order order);
 
     @Nullable
+    List<Comment> findAllByName(String name);
+
+    @Nullable
     List<Comment> findAllByNameOrderByPublishTimeDesc(String name);
 }

@@ -29,5 +29,4 @@ public class AgentVo implements Serializable {
     private Integer agentAchieve;//总业绩
     private Integer status;//状态。1表示正常，0表示冻结
     private RoleVo roleVo;
-
 }

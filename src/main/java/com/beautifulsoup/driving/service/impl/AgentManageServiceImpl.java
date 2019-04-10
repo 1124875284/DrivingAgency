@@ -483,7 +483,7 @@ public class AgentManageServiceImpl implements AgentManageService {
                 redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS,
                         DrivingConstant.Redis.RANKING_AGENT+ username,agentRankingVo);
                 stringRedisTemplate.opsForSet().add(DrivingConstant.Redis.AGENT_STAR_BELONG_TO+agent.getAgentName(),username);
-                agentRankingVo.setStarStatus(true);
+//                agentRankingVo.setStarStatus(true);
                 return agentRankingVo;
             }
         }else{
@@ -496,7 +496,7 @@ public class AgentManageServiceImpl implements AgentManageService {
                 redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS,
                         DrivingConstant.Redis.RANKING_AGENT+ username,agentRankingVo);
                 stringRedisTemplate.opsForSet().remove(DrivingConstant.Redis.AGENT_STAR_BELONG_TO+agent.getAgentName(),username);
-                agentRankingVo.setStarStatus(false);
+//                agentRankingVo.setStarStatus(false);
                 return agentRankingVo;
             }
         }

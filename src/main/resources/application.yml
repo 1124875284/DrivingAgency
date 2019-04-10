@@ -1,5 +1,11 @@
 server:
-  port: 9901
+  port: 9902
+  ssl:
+    key-store: server.keystore
+    key-alias: tomcat
+    enabled: true
+    key-store-password: 62952019
+    key-store-type: JKS
   servlet:
     context-path: /driving
 spring:
