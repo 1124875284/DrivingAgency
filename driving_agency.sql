@@ -11,7 +11,7 @@
  Target Server Version : 50725
  File Encoding         : 65001
 
- Date: 08/04/2019 15:33:00
+ Date: 10/04/2019 19:09:59
 */
 
 SET NAMES utf8mb4;
@@ -31,7 +31,7 @@ CREATE TABLE `tb_acl`  (
                          `type` int(11) NULL DEFAULT NULL,
                          `update_time` datetime(0) NULL DEFAULT NULL,
                          PRIMARY KEY (`id`) USING BTREE
-) ENGINE = MyISAM AUTO_INCREMENT = 17 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = MyISAM AUTO_INCREMENT = 20 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tb_acl
@@ -52,6 +52,9 @@ INSERT INTO `tb_acl` VALUES (13, '查看所有未审核的学员', '/student/lis
 INSERT INTO `tb_acl` VALUES (14, '审核学员', '/student/examine', 'Admin', '只有超管才能审核学员', 1, 0, '2019-04-05 21:56:51');
 INSERT INTO `tb_acl` VALUES (15, '查看排行榜', '/manage/ranking/listbydaily,/manage/ranking/listbytotal', 'Admin', '所有代理都能访问', 1, 2, '2019-04-06 10:15:44');
 INSERT INTO `tb_acl` VALUES (16, '上传文件', '/file/upload', 'Admin', '所有代理都能访问', 1, 2, '2019-04-06 16:01:46');
+INSERT INTO `tb_acl` VALUES (17, '清除代理业绩', '/manage/clear/all', 'Admin', '只有超管才能访问', 1, 0, '2019-04-10 17:08:22');
+INSERT INTO `tb_acl` VALUES (18, '删除代理', '/manage/agent/delete', 'Admin', '只有超管才能访问', 1, 0, '2019-04-10 17:09:42');
+INSERT INTO `tb_acl` VALUES (19, '删除学员', '/student/delete', 'Admin', '只有超管才能访问', 1, 0, '2019-04-10 17:10:15');
 
 -- ----------------------------
 -- Table structure for tb_agent
@@ -84,6 +87,20 @@ INSERT INTO `tb_agent` VALUES (11, 0, 'beautifulsoup@126.com', '372230000000000'
 INSERT INTO `tb_agent` VALUES (12, 11, 'beautifulsoup@126.com', '372230000000000', 'http://www.aa.jpg', '1-1号代理', '670b14728ad9902aecba32e22fa4f6bd', '17864195552', '山东师范大学', 9, 0, 3);
 INSERT INTO `tb_agent` VALUES (13, 10, 'beautifulsoup@126.com', '372230000000000', 'http://www.aa.jpg', '1-2号代理', '670b14728ad9902aecba32e22fa4f6bd', '17864195552', '山东师范大学', 9, 1, 3);
 INSERT INTO `tb_agent` VALUES (14, 0, 'beautifulsoup@126.com', '372230000000000', 'http://www.aa.jpg', '91代理', '670b14728ad9902aecba32e22fa4f6bd', '17864195552', '山东师范大学', 1, 1, 2);
+INSERT INTO `tb_agent` VALUES (15, 0, 'http://goudao.png', '372330111198888', '6669.5', 'aaa号', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 1, 1, 2);
+INSERT INTO `tb_agent` VALUES (16, 0, 'http://goudao.png', '372330111198888', '6669.5', 'aaa号-1', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 15, 0, 3);
+INSERT INTO `tb_agent` VALUES (17, 0, 'http://goudao.png', '372330111198888', '6669.5', 'bbb号', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 1, 1, 2);
+INSERT INTO `tb_agent` VALUES (18, 0, 'http://goudao.png', '372330111198888', '6669.5', 'bbb号-1', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 17, 0, 3);
+INSERT INTO `tb_agent` VALUES (19, 0, 'http://goudao.png', '372330111198888', '6669.5', 'ccc号', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 1, 1, 2);
+INSERT INTO `tb_agent` VALUES (20, 0, 'http://goudao.png', '372330111198888', '6669.5', 'ccc号-1', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 19, 0, 3);
+INSERT INTO `tb_agent` VALUES (21, 0, 'http://goudao.png', '372330111198888', '6669.5', 'ddd号', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 1, 1, 2);
+INSERT INTO `tb_agent` VALUES (22, 0, 'http://goudao.png', '372330111198888', '6669.5', 'eee号', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 1, 1, 2);
+INSERT INTO `tb_agent` VALUES (23, 0, 'http://goudao.png', '372330111198888', '6669.5', 'ccc号-2', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 19, 0, 3);
+INSERT INTO `tb_agent` VALUES (24, 0, 'http://goudao.png', '372330111198888', '6669.5', 'ccc号-3', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 19, 0, 3);
+INSERT INTO `tb_agent` VALUES (25, 0, 'http://goudao.png', '372330111198888', '6669.5', 'fff号', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 1, 1, 2);
+INSERT INTO `tb_agent` VALUES (26, 0, 'http://goudao.png', '372330111198888', '6669.5', 'hhh号', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 1, 1, 2);
+INSERT INTO `tb_agent` VALUES (27, 0, 'http://goudao.png', '372330111198888', '6669.5', 'mmm号', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 1, 1, 2);
+INSERT INTO `tb_agent` VALUES (28, 0, 'http://goudao.png', '372330111198888', '6669.5', 'mmm号-1', '670b14728ad9902aecba32e22fa4f6bd', '17864195555', '山东师范大学', 27, 0, 3);
 
 -- ----------------------------
 -- Table structure for tb_role
@@ -152,6 +169,9 @@ INSERT INTO `tb_role_acl` VALUES (3, 15);
 INSERT INTO `tb_role_acl` VALUES (1, 16);
 INSERT INTO `tb_role_acl` VALUES (2, 16);
 INSERT INTO `tb_role_acl` VALUES (3, 16);
+INSERT INTO `tb_role_acl` VALUES (1, 17);
+INSERT INTO `tb_role_acl` VALUES (1, 18);
+INSERT INTO `tb_role_acl` VALUES (1, 19);
 
 -- ----------------------------
 -- Table structure for tb_student
@@ -185,5 +205,12 @@ INSERT INTO `tb_student` VALUES (13, '1-1号代理', 1, '333656665', 'http://www
 INSERT INTO `tb_student` VALUES (14, '1-1号代理', 1, '333656665', 'http://www.naodi.png', '1-1-2号学员', '17864553321', NULL, '北京师范大学', '2019-04-05 15:13:50');
 INSERT INTO `tb_student` VALUES (15, '1-1号代理', 1, '333656665', 'http://www.naodi.png', '1-1-3号学员', '17864553321', NULL, '北京师范大学', '2019-04-05 15:13:54');
 INSERT INTO `tb_student` VALUES (16, '1-1号代理', 1, '333656665', 'http://www.naodi.png', '1-1-4号学员', '17864553321', NULL, '北京师范大学', '2019-04-05 22:15:44');
+INSERT INTO `tb_student` VALUES (22, 'aaa号', 0, '372330111198888', 'http://goudao.png', 'aa李狗蛋', '17864195555', 6669.50, '山东师范大学', '2019-04-08 13:38:56');
+INSERT INTO `tb_student` VALUES (23, 'fff号', 0, '372330111198888', 'http://goudao.png', 'asd李狗蛋', '17864195555', 6669.50, '山东师范大学', '2019-04-08 15:27:25');
+INSERT INTO `tb_student` VALUES (21, '1-2号代理', 0, '372330111198888', 'http://goudao.png', '李狗蛋', '17864195555', 6669.50, '山东师范大学', '2019-04-05 18:36:14');
+INSERT INTO `tb_student` VALUES (24, 'fff号', 0, '372330111198888', 'http://goudao.png', 'asfadd李狗蛋', '17864195555', 6669.50, '山东师范大学', '2019-04-08 15:27:40');
+INSERT INTO `tb_student` VALUES (25, 'fff号', 0, '372330111198888', 'http://goudao.png', 'asfadfadsfasfdasd李狗蛋', '17864195555', 6669.50, '山东师范大学', '2019-04-08 15:27:42');
+INSERT INTO `tb_student` VALUES (26, 'fff号', 0, '372330111198888', 'http://goudao.png', 'asfadfadsfasfasdfasfasfasfdasd李狗蛋', '17864195555', 6669.50, '山东师范大学', '2019-04-08 15:27:54');
+INSERT INTO `tb_student` VALUES (27, 'hhh号', 0, '372330111198888', 'http://goudao.png', 'asfadfadsfdsafdasfasdfasfasfasfdasd李狗蛋', '17864195555', 6669.50, '山东师范大学', '2019-04-08 15:30:27');
 
 SET FOREIGN_KEY_CHECKS = 1;
