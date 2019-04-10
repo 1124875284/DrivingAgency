@@ -160,4 +160,13 @@ public class AgentManageController {
         return ResponseResult.createByError("学员信息导出Excel失败");
     }
 
+    @DeleteMapping(value = "/clear/all",produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @ResponseBody
+    public ResponseResult<String> clearAllAchievements(){
+        String path=agentManageService.clearAllAchievements();
+        if (StringUtils.isNotBlank(path)){
+            return ResponseResult.createBySuccess("数据清除成功");
+        }
+        return ResponseResult.createByError("数据清除失败");
+    }
 }

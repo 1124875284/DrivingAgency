@@ -27,4 +27,5 @@ public interface AgentManageService {
     List<CommentVo> rankingCommentsListByName(String username);
     String derivedExcel();
     String derivedExcelSingle(String agentName);
+    String clearAllAchievements();
 }

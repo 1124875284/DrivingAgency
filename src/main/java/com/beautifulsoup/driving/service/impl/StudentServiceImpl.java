@@ -162,8 +162,10 @@ public class StudentServiceImpl implements StudentService {
                 if (agent.getRole().getType().equals(RoleCode.ROLE_SECOND_TIER_AGENT.getType())){
                     Agent parent=agentRepository.findById(agent.getParentId()).get();
                     Agent admin=agentRepository.findById(parent.getParentId()).get();
-                    stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+admin.getAgentName(),1);
-                    stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+admin.getAgentName(),1);
+                    stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
+                            DrivingConstant.Redis.ACHIEVEMENT_AGENT+admin.getAgentName(),1);
+                    stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
+                            DrivingConstant.Redis.ACHIEVEMENT_AGENT+admin.getAgentName(),1);
                 }
                 stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName(),1);
                 stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName(),1);

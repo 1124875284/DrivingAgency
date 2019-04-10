@@ -46,8 +46,8 @@ public class DrivingListener implements CommandLineRunner {
         agentRepository.findAll().stream()
                 .filter(agent -> agent.getParentId()>0)
                 .forEach(agent -> {
-//                    stringRedisTemplate.opsForHash().put(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
-//                            DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName(),String.valueOf(agent.getAgentAchieve()));
+                    stringRedisTemplate.opsForHash().put(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
+                            DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName(),String.valueOf(agent.getAgentAchieve()));
                     AgentBaseInfoVo agentBaseInfoVo=new AgentBaseInfoVo();
                     AgentRankingVo agentRankingVo=new AgentRankingVo();
                     BeanUtils.copyProperties(agent,agentRankingVo);

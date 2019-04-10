@@ -28,10 +28,11 @@ public class AchievementJob implements Job {
             String agentName = splitter.splitToList((CharSequence) key).get(1);
             Agent agentByAgentName = agentRepository.findAgentByAgentName(agentName);
             if (agentByAgentName != null) {
-                String achieveTotal = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL, key);
-                agentByAgentName.setAgentAchieve(Integer.parseInt(achieveTotal));
+                String achieveDaily = (String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,key);
+                agentByAgentName.setAgentAchieve(Integer.parseInt(achieveDaily)+agentByAgentName.getAgentAchieve());
                 agentRepository.save(agentByAgentName);
             }
         });
+        stringRedisTemplate.opsForHash().entries(DrivingConstant.Redis.ACHIEVEMENT_DAILY).keySet().forEach(key-> stringRedisTemplate.opsForHash().put(DrivingConstant.Redis.ACHIEVEMENT_DAILY,key,"0"));
     }
 }
