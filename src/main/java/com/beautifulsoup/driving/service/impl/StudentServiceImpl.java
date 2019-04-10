@@ -85,32 +85,6 @@ public class StudentServiceImpl implements StudentService {
 
         studentRepository.save(student);
 
-        stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_TOTAL_ORDER,
-                DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName(),
-                Double.parseDouble(Strings.nullToEmpty((String) stringRedisTemplate.opsForHash()
-                        .get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName()))));
-        stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_DAILY_ORDER,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName()
-                ,Double.parseDouble(Strings.nullToEmpty((String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName()))));
-
-
-        if (authentication.getRole().getType().equals(RoleCode.ROLE_SECOND_TIER_AGENT.getType())){
-            Agent parent = agentRepository.findById(authentication.getParentId()).get();
-//            stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),1);
-//            stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),1);
-
-            stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_TOTAL_ORDER,
-                    DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),
-                    Double.parseDouble(MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash()
-                            .get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL, DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName())),"0")));
-
-            stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_DAILY_ORDER,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName()
-                    ,Double.parseDouble(
-                            MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
-                            DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName())),"0")));
-
-        }
-
-
         StudentVo studentVo=new StudentVo();
         BeanUtils.copyProperties(student,studentVo);
         return studentVo;
@@ -167,10 +141,24 @@ public class StudentServiceImpl implements StudentService {
                             DrivingConstant.Redis.ACHIEVEMENT_AGENT+admin.getAgentName(),1);
                     stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
                             DrivingConstant.Redis.ACHIEVEMENT_AGENT+admin.getAgentName(),1);
+
+                    stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_TOTAL_ORDER,
+                            DrivingConstant.Redis.ACHIEVEMENT_AGENT+admin.getAgentName(),
+                            Double.parseDouble(MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash()
+                                    .get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL, DrivingConstant.Redis.ACHIEVEMENT_AGENT+admin.getAgentName())),"0")));
+                    stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_DAILY_ORDER,DrivingConstant.Redis.ACHIEVEMENT_AGENT+admin.getAgentName()
+                            ,Double.parseDouble(MoreObjects.firstNonNull(Strings.emptyToNull((String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
+                                            DrivingConstant.Redis.ACHIEVEMENT_AGENT+admin.getAgentName())),"0")));
                 }
                 stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName(),1);
                 stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName(),1);
 
+                stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_TOTAL_ORDER,
+                        DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName(),
+                        Double.parseDouble(Strings.nullToEmpty((String) stringRedisTemplate.opsForHash()
+                                .get(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName()))));
+                stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_DAILY_ORDER,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName()
+                        ,Double.parseDouble(Strings.nullToEmpty((String) stringRedisTemplate.opsForHash().get(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName()))));
 
             }
             StudentVo studentVo=new StudentVo();
