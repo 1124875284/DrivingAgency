@@ -5,6 +5,7 @@ import com.beautifulsoup.driving.dto.StudentDto;
 import com.beautifulsoup.driving.service.StudentService;
 import com.beautifulsoup.driving.vo.StudentVo;
 import io.swagger.annotations.Api;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -65,6 +66,16 @@ public class StudentController {
             return ResponseResult.createBySuccess("学员审核通过",studentVo);
         }
         return ResponseResult.createBySuccess("学员审核不通过");
+    }
+
+    @DeleteMapping(value = "/delete",produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @ResponseBody
+    public ResponseResult<StudentVo> deleteStudent(String studentName){
+        StudentVo studentVo=studentService.deleteStudent(studentName);
+        if (null!=studentVo){
+            return ResponseResult.createBySuccess("学员信息清除成功",studentVo);
+        }
+        return ResponseResult.createByError("学员信息清除失败");
     }
 
 }

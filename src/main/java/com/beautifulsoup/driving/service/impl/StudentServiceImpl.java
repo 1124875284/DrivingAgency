@@ -32,6 +32,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 
 import javax.management.relation.RoleStatus;
@@ -189,5 +190,18 @@ public class StudentServiceImpl implements StudentService {
             studentVos.add(studentVo);
         }
         return studentVos;
+    }
+
+    @Transactional
+    @Override
+    public StudentVo deleteStudent(String studentName) {
+        Student byStudentName = studentRepository.findByStudentName(studentName);
+        if (byStudentName != null) {
+            StudentVo studentVo=new StudentVo();
+            BeanUtils.copyProperties(byStudentName,studentVo);
+            studentRepository.delete(byStudentName);
+            return studentVo;
+        }
+        return null;
     }
 }

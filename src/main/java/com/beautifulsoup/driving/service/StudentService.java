@@ -12,4 +12,5 @@ public interface StudentService {
     List<StudentVo> getAllStudents();
     StudentVo examineExistsStudent(String studentname);
     List<StudentVo> getAllUnExaminedStudents();
+    StudentVo deleteStudent(String studentName);
 }

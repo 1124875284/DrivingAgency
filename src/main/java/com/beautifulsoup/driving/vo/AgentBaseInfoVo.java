@@ -19,7 +19,7 @@ public class AgentBaseInfoVo implements Serializable {
     private static final long serialVersionUID = -2024608984564029929L;
     private Integer id;
     private String agentName;
-    private Integer dailyAchieve;
+    private Integer dailyAchieve;//日业绩
     private Integer agentAchieve;//总业绩
     private Integer status;//状态。1表示正常，0表示冻结
 }
