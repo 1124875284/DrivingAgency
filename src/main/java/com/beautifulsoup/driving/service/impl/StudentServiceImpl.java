@@ -21,6 +21,7 @@ import com.beautifulsoup.driving.vo.StudentVo;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,10 +83,6 @@ public class StudentServiceImpl implements StudentService {
         }
 
         studentRepository.save(student);
-        stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,
-                DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName(),1);
-        stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,
-                DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName(),1);
 
         stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_TOTAL_ORDER,
                 DrivingConstant.Redis.ACHIEVEMENT_AGENT+authentication.getAgentName(),
@@ -97,8 +94,8 @@ public class StudentServiceImpl implements StudentService {
 
         if (authentication.getRole().getType().equals(RoleCode.ROLE_SECOND_TIER_AGENT.getType())){
             Agent parent = agentRepository.findById(authentication.getParentId()).get();
-            stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),1);
-            stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),1);
+//            stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),1);
+//            stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),1);
 
             stringRedisTemplate.opsForZSet().add(DrivingConstant.Redis.ACHIEVEMENT_TOTAL_ORDER,
                     DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),
@@ -124,11 +121,15 @@ public class StudentServiceImpl implements StudentService {
         Pageable pageable= PageRequest.of(pageNum-1,pageSize, Sort.by(Sort.Order.desc("studentPrice")));
         Page<Student> all = studentRepository.findAllByOperatorIn(collect,pageable);
         List<StudentVo> studentVos=Lists.newArrayList();
-        all.get().forEach(student -> {
-            StudentVo studentVo=new StudentVo();
-            BeanUtils.copyProperties(student,studentVo);
-            studentVos.add(studentVo);
-        });
+        if (all.isEmpty()){
+            return null;
+        }
+        all.get().filter(student -> student.getStatus().equals(StudentStatus.AVAILABLE.getStatus()))
+                .forEach(student -> {
+                    StudentVo studentVo=new StudentVo();
+                    BeanUtils.copyProperties(student,studentVo);
+                    studentVos.add(studentVo);
+                });
         return studentVos;
     }
 
@@ -137,9 +138,11 @@ public class StudentServiceImpl implements StudentService {
         List<String> collect = agentManageService.listAllAgents().stream().map(AgentVo::getAgentName).collect(Collectors.toList());
         List<Student> all = studentRepository.findAllByOperatorIn(collect,Sort.by(Sort.Order.desc("studentPrice")));
         List<StudentVo> studentVos= Lists.newArrayList();
+        if (CollectionUtils.isEmpty(all)){
+            return null;
+        }
 
-
-        all.forEach(student -> {
+        all.stream().filter(student -> student.getStatus().equals(StudentStatus.AVAILABLE.getStatus())).forEach(student -> {
             StudentVo studentVo=new StudentVo();
             BeanUtils.copyProperties(student,studentVo);
             studentVos.add(studentVo);
@@ -154,6 +157,18 @@ public class StudentServiceImpl implements StudentService {
             if (byStudentName.getStatus().equals(StudentStatus.UNAVAILABLE.getStatus())){
                 byStudentName.setStatus(StudentStatus.AVAILABLE.getStatus());
                 studentRepository.save(byStudentName);
+                Agent agent=agentRepository.findAgentByAgentName(byStudentName.getOperator());
+
+                if (agent.getRole().getType().equals(RoleCode.ROLE_SECOND_TIER_AGENT.getType())){
+                    Agent parent=agentRepository.findById(agent.getParentId()).get();
+                    Agent admin=agentRepository.findById(parent.getParentId()).get();
+                    stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+admin.getAgentName(),1);
+                    stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+admin.getAgentName(),1);
+                }
+                stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName(),1);
+                stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agent.getAgentName(),1);
+
+
             }
             StudentVo studentVo=new StudentVo();
             BeanUtils.copyProperties(byStudentName,studentVo);
