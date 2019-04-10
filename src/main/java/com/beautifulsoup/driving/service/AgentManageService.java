@@ -26,4 +26,5 @@ public interface AgentManageService {
     AgentRankingVo publishCommentByAgentName(CommentDto commentDto, BindingResult result);
     List<CommentVo> rankingCommentsListByName(String username);
     String derivedExcel();
+    String derivedExcelSingle(String agentName);
 }

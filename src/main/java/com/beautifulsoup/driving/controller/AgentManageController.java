@@ -145,10 +145,19 @@ public class AgentManageController {
     public ResponseResult<String> derivedExcel(){
         String path=agentManageService.derivedExcel();
         if (StringUtils.isNotBlank(path)){
-            return ResponseResult.createBySuccess("学员信息导出Excel成功",path);
+            return ResponseResult.createBySuccess("全部学员信息导出Excel成功",path);
         }
         return ResponseResult.createByError("学员信息导出Excel失败");
     }
 
+    @GetMapping(value = "/derived/excel/single",produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @ResponseBody
+    public ResponseResult<String> derivedExcelSingle(@RequestParam("agentName")String agentName){
+        String path=agentManageService.derivedExcelSingle(agentName);
+        if (StringUtils.isNotBlank(path)){
+            return ResponseResult.createBySuccess("单个代理学员信息导出Excel成功",path);
+        }
+        return ResponseResult.createByError("学员信息导出Excel失败");
+    }
 
 }

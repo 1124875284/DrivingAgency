@@ -27,20 +27,19 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.checkerframework.checker.units.qual.A;
+import org.checkerframework.checker.units.qual.C;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ResourceUtils;
 import org.springframework.validation.BindingResult;
 
 import javax.management.relation.RoleStatus;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -66,6 +65,9 @@ public class AgentManageServiceImpl implements AgentManageService {
 
     @Autowired
     private CommentRepository commentRepository;
+
+    @Autowired
+    private MailSenderUtil mailSenderUtil;
 
     @Autowired
     private StudentRepository studentRepository;
@@ -103,6 +105,7 @@ public class AgentManageServiceImpl implements AgentManageService {
 
                 Role role=roleRepository.findById(3).get();
                 agent.setRole(role);
+
                 Agent parent = agentRepository.findById(authentication.getParentId()).get();
                 stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),1);
                 stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+parent.getAgentName(),1);
@@ -146,9 +149,7 @@ public class AgentManageServiceImpl implements AgentManageService {
         }
         redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS,
                 DrivingConstant.Redis.RANKING_AGENT+agentRankingVo.getAgentName(),agentRankingVo);
-
         agentRepository.save(agent);
-
         AgentBaseInfoVo agentBaseInfoVo=new AgentBaseInfoVo();
         BeanUtils.copyProperties(agent,agentBaseInfoVo);
         redisTemplate.opsForHash().put(DrivingConstant.Redis.ACHIEVEMENT_AGENTS,
@@ -214,7 +215,10 @@ public class AgentManageServiceImpl implements AgentManageService {
 
             agentVos.add(agentVo);
         }
-        List<AgentVo> collect = agentVos.stream().sorted(Comparator.comparing(AgentVo::getAgentAchieve).reversed()).collect(Collectors.toList());
+        List<AgentVo> collect = agentVos.stream()
+                .filter(agentVo -> agentVo.getStatus().equals(AgentStatus.EXAMINED.getCode()))
+                .sorted(Comparator.comparing(AgentVo::getAgentAchieve).reversed())
+                .collect(Collectors.toList());
         return collect;
     }
 
@@ -259,6 +263,11 @@ public class AgentManageServiceImpl implements AgentManageService {
             agentVo.setRoleVo(roleVo);
             lists.add(agentVo);
         });
+        if (CollectionUtils.isNotEmpty(lists)){
+            List<AgentVo> collect = lists.stream().filter(agentVo -> agentVo.getStatus().equals(AgentStatus.EXAMINED.getCode()))
+                    .collect(Collectors.toList());
+            return collect;
+        }
         return lists;
     }
 
@@ -277,7 +286,7 @@ public class AgentManageServiceImpl implements AgentManageService {
             lists.add(agentVo);
         });
         List<AgentVo> collect = lists.stream().
-                filter(agentVo -> agentVo.getStatus() == 0).collect(Collectors.toList());
+                filter(agentVo -> agentVo.getStatus().equals(AgentStatus.UNEXAMINED.getCode())).collect(Collectors.toList());
         return collect;
     }
 
@@ -297,6 +306,7 @@ public class AgentManageServiceImpl implements AgentManageService {
         List<AgentVo> agentVos = listAllProcessedAgents();
         List<AgentBaseInfoVo> collect =Lists.newArrayList();
         agentVos.stream()
+                .filter(agentVo -> agentVo.getStatus().equals(AgentStatus.EXAMINED.getCode()))
                 .sorted(Comparator.comparing(AgentVo::getDailyAchieve).reversed())
                 .forEach(agentVo -> {
                     AgentBaseInfoVo agentBaseInfoVo=new AgentBaseInfoVo();
@@ -312,6 +322,7 @@ public class AgentManageServiceImpl implements AgentManageService {
         List<AgentVo> agentVos = listAllProcessedAgents();
         List<AgentBaseInfoVo> collect =Lists.newArrayList();
         agentVos.stream()
+                .filter(agentVo -> agentVo.getStatus().equals(AgentStatus.EXAMINED.getCode()))
                 .sorted(Comparator.comparing(AgentVo::getAgentAchieve).reversed())
                 .forEach(agentVo -> {
                     AgentBaseInfoVo agentBaseInfoVo=new AgentBaseInfoVo();
@@ -350,6 +361,7 @@ public class AgentManageServiceImpl implements AgentManageService {
             });
             //人数不是很多,可以采用内存排序
             List<AgentBaseInfoVo> collect = agentBaseInfoVos.stream()
+                    .filter(agentBaseInfoVo -> agentBaseInfoVo.getStatus().equals(AgentStatus.EXAMINED.getCode()))
                     .sorted(Comparator.comparing(AgentBaseInfoVo::getAgentAchieve).reversed()).collect(Collectors.toList());
             return collect;
         }
@@ -386,6 +398,7 @@ public class AgentManageServiceImpl implements AgentManageService {
                 agentBaseInfoVos.add(agentRankingVo);
             }
         }
+
         return agentBaseInfoVos;
     }
 
@@ -428,14 +441,31 @@ public class AgentManageServiceImpl implements AgentManageService {
         if (!b){
             throw new ParamException("当前代理不存在,点赞失败");
         }
-        Long starNums = stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.AGENT_STARS, username, 1);
-        AgentRankingVo agentRankingVo =
-                (AgentRankingVo) redisTemplate.opsForHash().
-                        get(DrivingConstant.Redis.RANKING_AGENTS, DrivingConstant.Redis.RANKING_AGENT+ username);
-        if (agentRankingVo != null) {
-            agentRankingVo.setStarNums(starNums.intValue());
-            redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS, DrivingConstant.Redis.RANKING_AGENT+ username,agentRankingVo);
-            return agentRankingVo;
+        //如果当前用户已经点过赞了取消点赞,否则点赞+1
+        Agent agent=SecurityContextHolder.getAgent();
+        Boolean isMember = stringRedisTemplate.opsForSet().isMember(DrivingConstant.Redis.AGENT_STAR_BELONG_TO + agent.getAgentName(), username);
+        if (!isMember.booleanValue()){
+            Long starNums = stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.AGENT_STARS, username, 1);
+            AgentRankingVo agentRankingVo =
+                    (AgentRankingVo) redisTemplate.opsForHash().
+                            get(DrivingConstant.Redis.RANKING_AGENTS, DrivingConstant.Redis.RANKING_AGENT+ username);
+            if (agentRankingVo != null) {
+                agentRankingVo.setStarNums(starNums.intValue());
+                redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS, DrivingConstant.Redis.RANKING_AGENT+ username,agentRankingVo);
+                stringRedisTemplate.opsForSet().add(DrivingConstant.Redis.AGENT_STAR_BELONG_TO+agent.getAgentName(),username);
+                return agentRankingVo;
+            }
+        }else{
+            Long starNums = stringRedisTemplate.opsForHash().increment(DrivingConstant.Redis.AGENT_STARS, username, -1);
+            AgentRankingVo agentRankingVo =
+                    (AgentRankingVo) redisTemplate.opsForHash().
+                            get(DrivingConstant.Redis.RANKING_AGENTS, DrivingConstant.Redis.RANKING_AGENT+ username);
+            if (agentRankingVo != null) {
+                agentRankingVo.setStarNums(starNums.intValue());
+                redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS, DrivingConstant.Redis.RANKING_AGENT+ username,agentRankingVo);
+                stringRedisTemplate.opsForSet().remove(DrivingConstant.Redis.AGENT_STAR_BELONG_TO+agent.getAgentName(),username);
+                return agentRankingVo;
+            }
         }
         return null;
     }
@@ -445,7 +475,7 @@ public class AgentManageServiceImpl implements AgentManageService {
         ParamValidatorUtil.validateBindingResult(result);
         boolean b = redisTemplate.opsForHash().hasKey(DrivingConstant.Redis.RANKING_AGENTS, DrivingConstant.Redis.RANKING_AGENT + commentDto.getName()).booleanValue();
         if (!b){
-            throw new ParamException("当前代理不存在,点赞失败");
+            throw new ParamException("当前代理不存在,评论失败");
         }
         Agent agent=SecurityContextHolder.getAgent();
         Comment comment=new Comment();
@@ -493,6 +523,44 @@ public class AgentManageServiceImpl implements AgentManageService {
             BeanUtils.copyProperties(student,studentVo);
             studentVos.add(studentVo);
         });
+
+        return derivedStudentInfo(studentVos);
+    }
+
+    @Override
+    public String derivedExcelSingle(String agentName) {
+        //取出当前代理下的全部学员信息
+        List<String> agentNames=Lists.newArrayList();
+        List<StudentVo> studentVos=Lists.newArrayList();
+        Agent agent=agentRepository.findAgentByAgentName(agentName);
+        if (agent==null||agent.getStatus().equals(AgentStatus.UNEXAMINED.getCode())){
+            throw new ParamException("当前代理不存在或者当前代理状态未审核,导出Excel失败");
+        }
+        agentNames.add(agent.getAgentName());
+        List<Agent> children = agentRepository.findAllByParentId(agent.getId());
+        if (CollectionUtils.isNotEmpty(children)){
+            for (Agent agent1:children){
+                agentNames.add(agent1.getAgentName());
+            }
+        }
+        List<Student> students = studentRepository.findAllByOperatorIn(agentNames, Sort.by(Sort.Order.desc("studentPrice")));
+        if (CollectionUtils.isNotEmpty(students)){
+            students.forEach(student -> {
+                StudentVo studentVo=new StudentVo();
+                BeanUtils.copyProperties(student,studentVo);
+                studentVos.add(studentVo);
+            });
+        }
+        return derivedStudentInfo(studentVos);
+    }
+
+    private String derivedStudentInfo(List<StudentVo> studentVos){
+
+        String agentEmail = SecurityContextHolder.getAgent().getAgentEmail();
+        if (StringUtils.isBlank(agentEmail)){
+            throw new ParamException("你的邮箱为空,不能导出Excel数据");
+        }
+
         HSSFWorkbook wb = new HSSFWorkbook();
         HSSFSheet sheet = wb.createSheet("获取学员信息Excel表格");
         HSSFRow row = null;
@@ -534,10 +602,19 @@ public class AgentManageServiceImpl implements AgentManageService {
         for (int i = 0; i <= 13; i++) {
             sheet.autoSizeColumn(i);
         }
-        File file=new File("C:\\agent\\Student.xls");
         try {
+
+            String folder=System.getProperty("java.io.tmpdir");
+            File file=new File(folder,UUID.randomUUID().toString()+".xls");
+            if (!file.exists()){
+                file.createNewFile();
+            }
             wb.write(file);
-            return "Excel导出成功"+file.getAbsolutePath();
+
+            mailSenderUtil.sendAttachmentMail(agentEmail,"【驾校全部学员数据】",
+                    "驾校代理小程序中的全部学员数据,Excel在附件中",file);
+
+            return "Excel导出成功";
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -556,6 +633,7 @@ public class AgentManageServiceImpl implements AgentManageService {
         }
         return agents;
     }
+
 
 
 }

@@ -38,6 +38,6 @@ public class DrivingConstant {
         String RANKING_AGENT="ranking_agent:";
         String AGENT_STARS="agent_stars:";
         String AGENT_STAR="agent_star:";
-
+        String AGENT_STAR_BELONG_TO="agent_star_belong_to";
     }
 }
