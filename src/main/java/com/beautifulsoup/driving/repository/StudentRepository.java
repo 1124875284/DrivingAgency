@@ -1,6 +1,7 @@
 package com.beautifulsoup.driving.repository;
 
 import com.beautifulsoup.driving.pojo.Student;
+import com.google.common.collect.ImmutableList;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -13,4 +14,6 @@ public interface StudentRepository extends JpaRepository<Student,Integer> {
     Page<Student> findAllByOperatorIn(List<String> operator, Pageable pageable);
     List<Student> findAllByOperatorIn(List<String> operator,Sort sort);
     List<Student> findAllByStatus(Integer status);
+    List<Student> findAllByOperator(String operator);
+
 }

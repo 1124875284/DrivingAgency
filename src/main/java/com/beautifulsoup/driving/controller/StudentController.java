@@ -70,7 +70,7 @@ public class StudentController {
 
     @DeleteMapping(value = "/delete",produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
-    public ResponseResult<StudentVo> deleteStudent(String studentName){
+    public ResponseResult<StudentVo> deleteStudent(@RequestParam("studentName") String studentName){
         StudentVo studentVo=studentService.deleteStudent(studentName);
         if (null!=studentVo){
             return ResponseResult.createBySuccess("学员信息清除成功",studentVo);

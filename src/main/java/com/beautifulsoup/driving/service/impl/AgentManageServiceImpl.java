@@ -18,6 +18,7 @@ import com.beautifulsoup.driving.vo.*;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.collections4.CollectionUtils;
@@ -482,6 +483,7 @@ public class AgentManageServiceImpl implements AgentManageService {
                 redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS,
                         DrivingConstant.Redis.RANKING_AGENT+ username,agentRankingVo);
                 stringRedisTemplate.opsForSet().add(DrivingConstant.Redis.AGENT_STAR_BELONG_TO+agent.getAgentName(),username);
+                agentRankingVo.setStarStatus(true);
                 return agentRankingVo;
             }
         }else{
@@ -494,6 +496,7 @@ public class AgentManageServiceImpl implements AgentManageService {
                 redisTemplate.opsForHash().put(DrivingConstant.Redis.RANKING_AGENTS,
                         DrivingConstant.Redis.RANKING_AGENT+ username,agentRankingVo);
                 stringRedisTemplate.opsForSet().remove(DrivingConstant.Redis.AGENT_STAR_BELONG_TO+agent.getAgentName(),username);
+                agentRankingVo.setStarStatus(false);
                 return agentRankingVo;
             }
         }
@@ -601,6 +604,33 @@ public class AgentManageServiceImpl implements AgentManageService {
             agentRepository.save(agent);
         });
         return "数据清除成功";
+    }
+
+    @Override
+    public AgentVo deleteAgentByName(String agentName) {
+        Agent agentByAgentName = agentRepository.findAgentByAgentName(agentName);
+        if (agentByAgentName != null) {
+            List<Student> students = studentRepository.findAllByOperator(agentByAgentName.getAgentName());
+            if (CollectionUtils.isNotEmpty(students)){
+                Optional<Agent> byId = agentRepository.findById(agentByAgentName.getParentId());
+                if (byId.isPresent()){
+                    for (Student student:students){
+                        student.setOperator(byId.get().getAgentName());
+                        studentRepository.save(student);
+                    }
+                }
+            }
+            stringRedisTemplate.opsForHash().delete(DrivingConstant.Redis.ACHIEVEMENT_DAILY,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agentByAgentName.getAgentName());
+            stringRedisTemplate.opsForHash().delete(DrivingConstant.Redis.ACHIEVEMENT_TOTAL,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agentByAgentName.getAgentName());
+            stringRedisTemplate.opsForZSet().remove(DrivingConstant.Redis.ACHIEVEMENT_DAILY_ORDER,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agentByAgentName.getAgentName());
+            stringRedisTemplate.opsForZSet().remove(DrivingConstant.Redis.ACHIEVEMENT_TOTAL_ORDER,DrivingConstant.Redis.ACHIEVEMENT_AGENT+agentByAgentName.getAgentName());
+            stringRedisTemplate.opsForHash().delete(DrivingConstant.Redis.RANKING_AGENTS,DrivingConstant.Redis.RANKING_AGENT+agentByAgentName.getAgentName());
+            agentRepository.delete(agentByAgentName);
+            AgentVo agentVo=new AgentVo();
+            BeanUtils.copyProperties(agentByAgentName,agentVo);
+            return agentVo;
+        }
+        return null;
     }
 
     private String derivedStudentInfo(List<StudentVo> studentVos){

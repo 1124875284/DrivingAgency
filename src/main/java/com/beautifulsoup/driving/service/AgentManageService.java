@@ -28,4 +28,5 @@ public interface AgentManageService {
     String derivedExcel();
     String derivedExcelSingle(String agentName);
     String clearAllAchievements();
+    AgentVo deleteAgentByName(String agentName);
 }

@@ -169,4 +169,14 @@ public class AgentManageController {
         }
         return ResponseResult.createByError("数据清除失败");
     }
+
+    @DeleteMapping(value = "/agent/delete",produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @ResponseBody
+    public ResponseResult<AgentVo> deleteAgentByName(@RequestParam("agentName")String agentName){
+        AgentVo agentVo=agentManageService.deleteAgentByName(agentName);
+        if (agentVo!=null){
+            return ResponseResult.createBySuccess("代理删除成功");
+        }
+        return ResponseResult.createByError("代理删除失败");
+    }
 }

@@ -26,4 +26,5 @@ public class AgentRankingVo implements Serializable {
     @JsonProperty(value = "comments")
     private List<CommentVo> commentVos;
     private Integer status;//状态。1表示正常，0表示冻结
+    private boolean starStatus;
 }
